@@ -2,32 +2,27 @@ import React, { useState } from "react";
 import axios from "axios";
 
 const stockCategories = {
-  Technology: ["AAPL", "GOOGL", "MSFT"],
-  Healthcare: ["JNJ", "PFE", "MRK"],
-  Finance: ["JPM", "GS", "C"],
+  Technology: ["AAPL", "GOOGL", "MSFT", "TSLA", "FB"],
+  Healthcare: ["JNJ", "PFE", "MRK", "AMGN", "GILD"],
+  Finance: ["JPM", "GS", "C", "BAC", "WFC"],
 };
 
-const StockForm = ({ setGraphData }) => {
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [interval, setInterval] = useState("");
-
-  const handleCategoryChange = (e) => {
-    const value = e.target.value;
-    setSelectedCategories((prev) =>
-      prev.includes(value) ? prev.filter((cat) => cat !== value) : [...prev, value]
-    );
-  };
+const StockForm = ({ setSymbol, setInterval, setStockData, setGraphData }) => {
+  const [category, setCategory] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const symbols = selectedCategories
-      .flatMap((category) => stockCategories[category])
-      .join(",");
+
+    if (!setSymbol || !setInterval) {
+      alert("Please provide both stock symbol and interval.");
+      return;
+    }
 
     try {
-      const response = await axios.get("http://localhost:5000/api/stock/compare", {
-        params: { symbols, interval },
+      const response = await axios.get("http://localhost:5000/api/stock", {
+        params: { symbol: setSymbol, interval: setInterval },
       });
+      setStockData(response.data);
       setGraphData(response.data);
     } catch (error) {
       alert("Failed to fetch stock data. Please try again.");
@@ -42,26 +37,43 @@ const StockForm = ({ setGraphData }) => {
     >
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">
-          Stock Categories
+          Stock Category
         </label>
-        {Object.keys(stockCategories).map((category) => (
-          <div key={category}>
-            <input
-              type="checkbox"
-              value={category}
-              onChange={handleCategoryChange}
-              checked={selectedCategories.includes(category)}
-            />
-            <label className="ml-2">{category}</label>
-          </div>
-        ))}
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        >
+          <option value="">Select Category</option>
+          <option value="Technology">Technology</option>
+          <option value="Healthcare">Healthcare</option>
+          <option value="Finance">Finance</option>
+        </select>
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-700 text-sm font-bold mb-2">
+          Stock Symbol
+        </label>
+        <select
+          value={setSymbol}
+          onChange={(e) => setSymbol(e.target.value)}
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        >
+          <option value="">Select Symbol</option>
+          {category &&
+            stockCategories[category]?.map((symbol) => (
+              <option key={symbol} value={symbol}>
+                {symbol}
+              </option>
+            ))}
+        </select>
       </div>
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">
           Interval
         </label>
         <select
-          value={interval}
+          value={setInterval}
           onChange={(e) => setInterval(e.target.value)}
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         >
