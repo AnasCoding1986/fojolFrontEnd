@@ -1,28 +1,28 @@
 import React from "react";
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
-const GeneratePDF = ({ stockData, graphRef }) => {
-  const generatePDF = () => {
+const GeneratePDF = ({ graphData }) => {
+  const generatePDF = async () => {
     const doc = new jsPDF();
 
-    // Add report title and details
+    // Add the title
     doc.text("Stock Market Analysis Report", 20, 20);
-    doc.text(`Stock Symbol: ${stockData["Meta Data"]["2. Symbol"]}`, 20, 30);
-    doc.text(`Interval: ${stockData["Meta Data"]["3. Interval"]}`, 20, 40);
 
-    // Add the graph to the PDF
-    if (graphRef?.current) {
-      const graphImage = graphRef.current.toBase64Image();
-      doc.addImage(graphImage, "PNG", 15, 50, 180, 100);
-    } else {
-      doc.text("Graph data not available.", 20, 70);
+    // Capture the graph using html2canvas
+    const graphElement = document.getElementById("stock-graph");
+    if (graphElement) {
+      const canvas = await html2canvas(graphElement);
+      const imgData = canvas.toDataURL("image/png");
+      doc.addImage(imgData, "PNG", 10, 30, 180, 90); // Adjust position and size
     }
 
+    // Save the PDF
     doc.save("stock_report.pdf");
   };
 
   return (
-    <div className="mt-4">
+    <div>
       <button
         onClick={generatePDF}
         className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"

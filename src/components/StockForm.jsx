@@ -1,25 +1,34 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const StockForm = ({ setStockData, setGraphData }) => {
-  const [symbol, setSymbol] = useState(""); // For stock symbol
-  const [interval, setInterval] = useState(""); // For stock interval
+const stockCategories = {
+  Technology: ["AAPL", "GOOGL", "MSFT"],
+  Healthcare: ["JNJ", "PFE", "MRK"],
+  Finance: ["JPM", "GS", "C"],
+};
+
+const StockForm = ({ setGraphData }) => {
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [interval, setInterval] = useState("");
+
+  const handleCategoryChange = (e) => {
+    const value = e.target.value;
+    setSelectedCategories((prev) =>
+      prev.includes(value) ? prev.filter((cat) => cat !== value) : [...prev, value]
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!symbol || !interval) {
-      alert("Please provide both stock symbol and interval.");
-      return;
-    }
+    const symbols = selectedCategories
+      .flatMap((category) => stockCategories[category])
+      .join(",");
 
     try {
-      const response = await axios.get("http://localhost:5000/api/stock", {
-        params: { symbol, interval },
+      const response = await axios.get("http://localhost:5000/api/stock/compare", {
+        params: { symbols, interval },
       });
-
-      setStockData(response.data); // Update the state with stock data
-      setGraphData(response.data); // Pass the data for graph rendering
+      setGraphData(response.data);
     } catch (error) {
       alert("Failed to fetch stock data. Please try again.");
       console.error(error);
@@ -31,21 +40,26 @@ const StockForm = ({ setStockData, setGraphData }) => {
       onSubmit={handleSubmit}
       className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md"
     >
-      {/* Stock Symbol Input */}
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">Stock Symbol</label>
-        <input
-          type="text"
-          placeholder="e.g., GOOGL"
-          value={symbol}
-          onChange={(e) => setSymbol(e.target.value)}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        />
+        <label className="block text-gray-700 text-sm font-bold mb-2">
+          Stock Categories
+        </label>
+        {Object.keys(stockCategories).map((category) => (
+          <div key={category}>
+            <input
+              type="checkbox"
+              value={category}
+              onChange={handleCategoryChange}
+              checked={selectedCategories.includes(category)}
+            />
+            <label className="ml-2">{category}</label>
+          </div>
+        ))}
       </div>
-
-      {/* Interval Dropdown */}
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">Interval</label>
+        <label className="block text-gray-700 text-sm font-bold mb-2">
+          Interval
+        </label>
         <select
           value={interval}
           onChange={(e) => setInterval(e.target.value)}
@@ -59,8 +73,6 @@ const StockForm = ({ setStockData, setGraphData }) => {
           <option value="60min">1 Hour</option>
         </select>
       </div>
-
-      {/* Submit Button */}
       <button
         type="submit"
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
