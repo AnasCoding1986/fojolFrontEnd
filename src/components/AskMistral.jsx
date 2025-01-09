@@ -13,7 +13,7 @@ const AskMistral = ({ symbol, interval }) => {
     e.preventDefault();
 
     if (!query) {
-      alert("Please enter a query!");
+      alert("Please enter to the  a query!");
       return;
     }
 
